@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/lib/auth';
-import { prisma } from '@/lib/db';
 
 export async function GET(request: NextRequest) {
   try {
+    // Dynamic imports
+    const { getServerSession } = await import('next-auth/next');
+    const { authOptions } = await import('@/lib/auth');
+    const { prisma } = await import('@/lib/db');
+
     const session = await getServerSession(authOptions);
     
     if (!session?.user?.email) {
@@ -37,6 +39,11 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    // Dynamic imports
+    const { getServerSession } = await import('next-auth/next');
+    const { authOptions } = await import('@/lib/auth');
+    const { prisma } = await import('@/lib/db');
+
     const session = await getServerSession(authOptions);
     
     if (!session?.user?.email) {
