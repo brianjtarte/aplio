@@ -11,6 +11,14 @@ const signUpSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
+    // Add environment check
+    if (!process.env.DATABASE_URL) {
+      return NextResponse.json(
+        { message: 'Database not configured' },
+        { status: 500 }
+      );
+    }
+
     const body = await request.json();
     const { name, email, password } = signUpSchema.parse(body);
 
@@ -62,9 +70,25 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // More specific database error handling
+    if (error instanceof Error && error.message.includes('database')) {
+      return NextResponse.json(
+        { message: 'Database connection failed' },
+        { status: 500 }
+      );
+    }
+
     return NextResponse.json(
       { message: 'Internal server error' },
       { status: 500 }
     );
   }
+}
+
+// Add a GET handler to prevent build-time execution
+export async function GET() {
+  return NextResponse.json(
+    { message: 'Method not allowed' },
+    { status: 405 }
+  );
 }
