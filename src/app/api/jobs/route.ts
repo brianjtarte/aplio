@@ -1,15 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { verifyAuth } from '@/lib/auth-middleware';
 
 export async function GET(request: NextRequest) {
   try {
     // Dynamic imports
-    const { getServerSession } = await import('next-auth/next');
-    const { authOptions } = await import('@/lib/auth');
     const { prisma } = await import('@/lib/db');
 
-    const session = await getServerSession(authOptions);
+    const user = await verifyAuth(request);
     
-    if (!session?.user?.email) {
+    if (!user) {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
 
