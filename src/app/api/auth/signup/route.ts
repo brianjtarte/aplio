@@ -1,23 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server';
-import bcrypt from 'bcryptjs';
-import { z } from 'zod';
-import { prisma } from '@/lib/db';
 
-const signUpSchema = z.object({
-  name: z.string().min(2),
-  email: z.string().email(),
-  password: z.string().min(6),
-});
-
+// Move all imports inside the function to avoid build-time execution
 export async function POST(request: NextRequest) {
   try {
-    // Add environment check
+    // Import dependencies only when actually needed
+    const bcrypt = await import('bcryptjs');
+    const { z } = await import('zod');
+    const { prisma } = await import('@/lib/db');
+
+    // Check environment
     if (!process.env.DATABASE_URL) {
       return NextResponse.json(
         { message: 'Database not configured' },
         { status: 500 }
       );
     }
+
+    const signUpSchema = z.object({
+      name: z.string().min(2),
+      email: z.string().email(),
+      password: z.string().min(6),
+    });
 
     const body = await request.json();
     const { name, email, password } = signUpSchema.parse(body);
@@ -47,7 +50,7 @@ export async function POST(request: NextRequest) {
           create: {
             tier: 'FREE',
             appsPerMonth: 10,
-            renewsAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
+            renewsAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
           },
         },
       },
@@ -63,18 +66,11 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Sign up error:', error);
     
+    const { z } = await import('zod');
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { message: 'Invalid input data', errors: error.errors },
         { status: 400 }
-      );
-    }
-
-    // More specific database error handling
-    if (error instanceof Error && error.message.includes('database')) {
-      return NextResponse.json(
-        { message: 'Database connection failed' },
-        { status: 500 }
       );
     }
 
@@ -85,7 +81,6 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// Add a GET handler to prevent build-time execution
 export async function GET() {
   return NextResponse.json(
     { message: 'Method not allowed' },
