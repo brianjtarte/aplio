@@ -2,9 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(request: NextRequest) {
   try {
+    // Debug environment variables
+    console.log('DATABASE_URL exists:', !!process.env.DATABASE_URL);
+    console.log('DATABASE_URL starts with:', process.env.DATABASE_URL?.substring(0, 20));
+    
     if (!process.env.DATABASE_URL) {
       return NextResponse.json(
-        { message: 'Database not configured' },
+        { message: 'DATABASE_URL not configured' },
         { status: 500 }
       );
     }
@@ -22,46 +26,18 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { name, email, password } = signUpSchema.parse(body);
 
+    console.log('About to query database...');
+
     const existingUser = await prisma.user.findUnique({
       where: { email },
     });
 
-    if (existingUser) {
-      return NextResponse.json(
-        { message: 'User already exists' },
-        { status: 400 }
-      );
-    }
-
-    const hashedPassword = await bcrypt.hash(password, 12);
-
-    // Simplified user creation without plan for now
-    const user = await prisma.user.create({
-      data: {
-        name,
-        email,
-        password: hashedPassword,
-      },
-    });
-
-    const { password: _, ...userWithoutPassword } = user;
-
-    return NextResponse.json(
-      { user: userWithoutPassword },
-      { status: 201 }
-    );
+    // Rest of your signup logic...
+    
   } catch (error) {
     console.error('Sign up error:', error);
-    
-    if (error instanceof Error) {
-      return NextResponse.json(
-        { message: 'Internal server error', details: error.message },
-        { status: 500 }
-      );
-    }
-
     return NextResponse.json(
-      { message: 'Internal server error' },
+      { message: 'Internal server error', details: error instanceof Error ? error.message : 'Unknown' },
       { status: 500 }
     );
   }
