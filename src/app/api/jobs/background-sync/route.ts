@@ -1,9 +1,4 @@
-// src/app/api/jobs/background-sync/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/db';
-import { fetchJobsFromMultipleCompanies } from '@/lib/company-job-api';
-import * as fs from 'fs';
-import * as path from 'path';
 
 interface CompanyJobBoard {
   company: string;
@@ -13,7 +8,10 @@ interface CompanyJobBoard {
   endpointURL: string;
 }
 
-function parseCompaniesFromCSV(): CompanyJobBoard[] {
+async function parseCompaniesFromCSV(): Promise<CompanyJobBoard[]> {
+  const fs = await import('fs');
+  const path = await import('path');
+  
   try {
     const csvPath = path.join(process.cwd(), 'src', 'data', 'companies.csv');
     
@@ -98,6 +96,10 @@ function cleanCSVField(field: string): string {
 
 export async function POST(request: NextRequest) {
   try {
+    // Dynamic imports
+    const { prisma } = await import('@/lib/db');
+    const { fetchJobsFromMultipleCompanies } = await import('@/lib/company-job-api');
+
     // Verify this is a legitimate background job call
     const authHeader = request.headers.get('authorization');
     const expectedToken = process.env.BACKGROUND_JOB_SECRET || 'your-secret-token';
@@ -110,11 +112,11 @@ export async function POST(request: NextRequest) {
     const startTime = new Date();
 
     // Load companies from CSV
-    const allCompanies = parseCompaniesFromCSV();
+    const allCompanies = await parseCompaniesFromCSV();
     console.log(`Loaded ${allCompanies.length} companies from CSV`);
 
     // Process in smaller batches to avoid overwhelming APIs
-    const batchSize = 20; // Process 20 companies at a time
+    const batchSize = 20;
     let totalNewJobs = 0;
     let totalUpdatedJobs = 0;
     let successfulCompanies = 0;
@@ -125,10 +127,8 @@ export async function POST(request: NextRequest) {
       console.log(`Processing batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(allCompanies.length / batchSize)}`);
 
       try {
-        // Fetch jobs from this batch of companies
         const jobs = await fetchJobsFromMultipleCompanies(batch);
         
-        // Upsert jobs to database
         for (const job of jobs) {
           try {
             const existingJob = await prisma.job.findUnique({
@@ -159,8 +159,6 @@ export async function POST(request: NextRequest) {
         }
 
         successfulCompanies += batch.length;
-        
-        // Brief pause between batches to be respectful to APIs
         await new Promise(resolve => setTimeout(resolve, 2000));
         
       } catch (batchError) {
@@ -169,7 +167,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Clean up old jobs (older than 7 days)
+    // Clean up old jobs
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
     
@@ -183,8 +181,6 @@ export async function POST(request: NextRequest) {
 
     const endTime = new Date();
     const durationMinutes = Math.round((endTime.getTime() - startTime.getTime()) / (1000 * 60));
-
-    console.log(`Background sync completed in ${durationMinutes} minutes`);
 
     return NextResponse.json({
       success: true,
@@ -212,10 +208,10 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// Health check endpoint
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
-    // Basic health check - count recent jobs
+    const { prisma } = await import('@/lib/db');
+    
     const threeDaysAgo = new Date();
     threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
     
