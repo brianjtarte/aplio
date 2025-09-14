@@ -4,17 +4,6 @@ import CredentialsProvider from 'next-auth/providers/credentials';
 import bcrypt from 'bcryptjs';
 import { prisma } from './db';
 
-declare module "next-auth" {
-  interface Session {
-    user: {
-      id: string;
-      name?: string | null;
-      email?: string | null;
-      image?: string | null;
-    };
-  }
-}
-
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
   providers: [
@@ -66,22 +55,22 @@ export const authOptions: NextAuthOptions = {
   pages: {
     signIn: '/signin',
   },
-  callbacks: {
-    async jwt({ token, user }) {
-      if (user) {
-        token.id = user.id;
-        token.email = user.email;
-      }
-      return token;
-    },
-    async session({ session, token }) {
-      if (token && session.user) {
-        session.user.id = token.id as string;
-        session.user.email = token.email as string;
-      }
-      return session;
-    },
+callbacks: {
+  async jwt({ token, user }) {
+    if (user) {
+      token.id = user.id;
+      token.email = user.email ?? null; // Handle potential undefined
+    }
+    return token;
   },
+  async session({ session, token }) {
+    if (token && session.user) {
+      session.user.id = token.id as string;
+      session.user.email = token.email ?? null;
+    }
+    return session;
+  },
+},
   debug: process.env.NODE_ENV === 'development',
 };
 
