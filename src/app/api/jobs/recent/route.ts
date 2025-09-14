@@ -1,11 +1,12 @@
-// src/app/api/jobs/recent/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/lib/auth';
-import { prisma } from '@/lib/db';
 
 export async function GET(request: NextRequest) {
   try {
+    // Dynamic imports
+    const { getServerSession } = await import('next-auth/next');
+    const { authOptions } = await import('@/lib/auth');
+    const { prisma } = await import('@/lib/db');
+
     const session = await getServerSession(authOptions);
     if (!session?.user?.email) {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
@@ -30,10 +31,9 @@ export async function GET(request: NextRequest) {
 
     // Filter for US locations in JavaScript
     const jobs = allRecentJobs.filter(job => {
-      if (!job.location) return false; // Skip jobs with null/undefined location
+      if (!job.location) return false;
       const location = job.location.toLowerCase();
       
-      // Include US indicators
       const includePatterns = [
         'united states', 'usa', 'us,', ', us', 'remote', 'anywhere',
         'california', 'new york', 'texas', 'florida', 'washington', 'oregon',
@@ -41,7 +41,6 @@ export async function GET(request: NextRequest) {
         'virginia', 'arizona', 'tennessee', 'nevada', 'utah'
       ];
       
-      // Exclude non-US indicators  
       const excludePatterns = [
         'canada', 'united kingdom', 'uk,', ', uk', 'germany', 'france',
         'italy', 'spain', 'netherlands', 'poland', 'australia', 'new zealand',
@@ -54,7 +53,6 @@ export async function GET(request: NextRequest) {
       return hasUSIndicator && !hasNonUSIndicator;
     });
 
-    // Get the latest ingestion time from job metadata (if you track this)
     const latestJob = await prisma.job.findFirst({
       where: { active: true },
       orderBy: { updatedAt: 'desc' },
@@ -77,15 +75,17 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// Optional: GET endpoint to show ingestion status
 export async function POST(request: NextRequest) {
   try {
+    const { getServerSession } = await import('next-auth/next');
+    const { authOptions } = await import('@/lib/auth');
+    const { prisma } = await import('@/lib/db');
+
     const session = await getServerSession(authOptions);
     if (!session?.user?.email) {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
 
-    // Get stats about the database
     const totalJobs = await prisma.job.count({ where: { active: true } });
     
     const threeDaysAgo = new Date();

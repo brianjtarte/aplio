@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(request: NextRequest) {
   try {
-    // Dynamic imports to avoid build-time execution
+    // Dynamic imports
     const { getServerSession } = await import('next-auth/next');
     const { authOptions } = await import('@/lib/auth');
     const { prisma } = await import('@/lib/db');
