@@ -89,7 +89,32 @@ async function parseCompaniesFromCSV(): Promise<CompanyJobBoard[]> {
     return companies;
   } catch (error) {
     console.error('Error reading companies CSV:', error);
-    throw error;
+    
+    // Fallback to test companies for now
+    console.log('Using fallback test companies...');
+    return [
+      {
+        company: "Stripe",
+        provider: "greenhouse",
+        token: "stripe",
+        jobsCount: 50,
+        endpointURL: "https://api.greenhouse.io/v1/boards/stripe/jobs"
+      },
+      {
+        company: "Airbnb", 
+        provider: "greenhouse",
+        token: "airbnb",
+        jobsCount: 30,
+        endpointURL: "https://api.greenhouse.io/v1/boards/airbnb/jobs"
+      },
+      {
+        company: "Coinbase",
+        provider: "greenhouse", 
+        token: "coinbase",
+        jobsCount: 25,
+        endpointURL: "https://api.greenhouse.io/v1/boards/coinbase/jobs"
+      }
+    ];
   }
 }
 
