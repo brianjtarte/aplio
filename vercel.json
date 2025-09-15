@@ -1,7 +1,8 @@
 {
   "functions": {
     "app/api/**/*.ts": {
-      "maxDuration": 30
+      "maxDuration": 30,
+      "includeFiles": "public/companies.csv"
     }
   },
   "crons": [
