@@ -13,14 +13,39 @@ async function parseCompaniesFromCSV(): Promise<CompanyJobBoard[]> {
   const path = await import('path');
   
   try {
+    // Debug logging
+    console.log('Current working directory:', process.cwd());
+    
+    // Check what's in the root directory
+    try {
+      const rootFiles = fs.readdirSync(process.cwd());
+      console.log('Files in root directory:', rootFiles);
+    } catch (rootError) {
+      console.log('Could not read root directory:', rootError);
+    }
+    
+    // Check what's in the public directory
+    try {
+      const publicDir = path.join(process.cwd(), 'public');
+      const publicFiles = fs.readdirSync(publicDir);
+      console.log('Files in public directory:', publicFiles);
+    } catch (publicError) {
+      console.log('Could not read public directory:', publicError);
+    }
+    
     const csvPath = path.join(process.cwd(), 'public', 'companies.csv');
+    console.log('Looking for CSV at:', csvPath);
+    console.log('CSV file exists:', fs.existsSync(csvPath));
     
     if (!fs.existsSync(csvPath)) {
-      throw new Error('companies.csv not found in public/ directory');
+      throw new Error(`companies.csv not found at ${csvPath}`);
     }
 
+    // Rest of your existing CSV parsing code...
     const csvContent = fs.readFileSync(csvPath, 'utf-8');
     const lines = csvContent.split('\n').filter(line => line.trim());
+    
+    // ... continue with your existing parsing logic
     
     if (lines.length < 2) {
       throw new Error('CSV must have at least a header and one data row');
