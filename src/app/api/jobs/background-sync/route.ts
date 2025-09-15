@@ -9,43 +9,20 @@ interface CompanyJobBoard {
 }
 
 async function parseCompaniesFromCSV(): Promise<CompanyJobBoard[]> {
-  const fs = await import('fs');
-  const path = await import('path');
-  
   try {
-    // Debug logging
-    console.log('Current working directory:', process.cwd());
+    // Use Vercel's static file serving instead of file system access
+    const baseUrl = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'https://aplio-co.vercel.app';
+    const csvUrl = `${baseUrl}/data/companies.csv`;
     
-    // Check what's in the root directory
-    try {
-      const rootFiles = fs.readdirSync(process.cwd());
-      console.log('Files in root directory:', rootFiles);
-    } catch (rootError) {
-      console.log('Could not read root directory:', rootError);
+    console.log('Fetching CSV from:', csvUrl);
+    
+    const response = await fetch(csvUrl);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch CSV: ${response.status} ${response.statusText}`);
     }
     
-    // Check what's in the public directory
-    try {
-      const publicDir = path.join(process.cwd(), 'public');
-      const publicFiles = fs.readdirSync(publicDir);
-      console.log('Files in public directory:', publicFiles);
-    } catch (publicError) {
-      console.log('Could not read public directory:', publicError);
-    }
-    
-    const csvPath = path.join(process.cwd(), 'companies.csv');
-    console.log('Looking for CSV at:', csvPath);
-    console.log('CSV file exists:', fs.existsSync(csvPath));
-    
-    if (!fs.existsSync(csvPath)) {
-      throw new Error(`companies.csv not found at ${csvPath}`);
-    }
-
-    // Rest of your existing CSV parsing code...
-    const csvContent = fs.readFileSync(csvPath, 'utf-8');
+    const csvContent = await response.text();
     const lines = csvContent.split('\n').filter(line => line.trim());
-    
-    // ... continue with your existing parsing logic
     
     if (lines.length < 2) {
       throw new Error('CSV must have at least a header and one data row');
@@ -86,11 +63,13 @@ async function parseCompaniesFromCSV(): Promise<CompanyJobBoard[]> {
       }
     }
 
+    console.log(`Successfully loaded ${companies.length} companies from CSV`);
     return companies;
+
   } catch (error) {
     console.error('Error reading companies CSV:', error);
     
-    // Fallback to test companies for now
+    // Fallback to test companies
     console.log('Using fallback test companies...');
     return [
       {
