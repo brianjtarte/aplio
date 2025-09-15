@@ -13,10 +13,10 @@ async function parseCompaniesFromCSV(): Promise<CompanyJobBoard[]> {
   const path = await import('path');
   
   try {
-    const csvPath = path.join(process.cwd(), 'src', 'data', 'companies.csv');
+    const csvPath = path.join(process.cwd(), 'public', 'companies.csv');
     
     if (!fs.existsSync(csvPath)) {
-      throw new Error('companies.csv not found in src/data/ directory');
+      throw new Error('companies.csv not found in public/ directory');
     }
 
     const csvContent = fs.readFileSync(csvPath, 'utf-8');
