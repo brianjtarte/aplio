@@ -33,7 +33,7 @@ async function parseCompaniesFromCSV(): Promise<CompanyJobBoard[]> {
       console.log('Could not read public directory:', publicError);
     }
     
-    const csvPath = path.join(process.cwd(), 'public', 'companies.csv');
+    const csvPath = path.join(process.cwd(), 'companies.csv');
     console.log('Looking for CSV at:', csvPath);
     console.log('CSV file exists:', fs.existsSync(csvPath));
     
