@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { signIn, getSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
@@ -15,23 +14,28 @@ export default function SignInPage() {
   const router = useRouter();
 
   // 
-    const handleSubmit = async (e: React.FormEvent) => {
+const handleSubmit = async (e: React.FormEvent) => {
   e.preventDefault();
   setIsLoading(true);
   setError('');
 
   try {
-    const result = await signIn('credentials', {
-      email: formData.email,
-      password: formData.password,
-      redirect: false,
+    const response = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: formData.email,
+        password: formData.password,
+      }),
     });
 
-    if (result?.error) {
-      setError('Invalid email or password');
-    } else if (result?.ok) {
-      // Force refresh the page to ensure session is properly loaded
-      window.location.href = '/dashboard';
+    if (response.ok) {
+      const data = await response.json();
+      // The JWT cookie is automatically set by the server
+      router.push('/jobs'); // or '/dashboard'
+    } else {
+      const errorData = await response.json();
+      setError(errorData.message || 'Invalid email or password');
     }
   } catch (error) {
     setError('An unexpected error occurred. Please try again.');
