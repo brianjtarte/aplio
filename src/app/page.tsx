@@ -25,11 +25,13 @@ export default function HomePage() {
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <button className="bg-blue-600 text-white px-8 py-4 rounded-lg font-semibold text-lg hover:bg-blue-700 transition-colors">
-              Start Free Trial
-            </button>
+            <Link href="/signup">
+              <button className="bg-blue-600 text-white px-8 py-4 rounded-lg font-semibold text-lg hover:bg-blue-700 transition-colors">
+                Start Free Trial
+              </button>
+            </Link>
             
-            <Link href="/signin"></Link>
+            <Link href="/signin">
               <button className="border-2 border-blue-600 text-blue-600 px-8 py-4 rounded-lg font-semibold text-lg hover:bg-blue-50 transition-colors">
                 Sign In
               </button>
